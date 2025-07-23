@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% block title %}マイページ{% endblock %}
+
+{% block content %}
+    <h2>マイページ</h2>
+    <p>ユーザー名: {{ user.username }}</p>
+    <p>メールアドレス: {{ user.email }}</p>
+    {# ここに注文履歴や設定変更へのリンクなどを追加できます #}
+    <a href="{% url 'users:logout' %}">ログアウト</a>
+{% endblock %}

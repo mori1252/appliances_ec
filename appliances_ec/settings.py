@@ -110,9 +110,12 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-STATICFILES_DIR = [
+STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
+
+LOGIN_REDIRECT_URL = 'products:list' #ログイン成功後のリダイレクト先
+LOGOUT_REDIRECT_URL = 'products:list' #ログアウト成功後のリダイレクト先
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

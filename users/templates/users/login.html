@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}ログイン{% endblock %}
+
+{% block content %}
+    <h2>ログイン</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }} {#フォームフィールドを段落形式で表示 #}
+        <button type="submit">ログイン</button>
+    </form>
+    <p>アカウントが無い方はこちら<a href="{% url 'users:register' %}">新規登録</a></p>
+{% endblock %}

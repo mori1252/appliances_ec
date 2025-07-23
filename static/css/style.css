@@ -5,3 +5,14 @@
     width: 1.2em;
     height: 1.2em;
 }
+
+/* 商品詳細ページの画像がない場合のスタイル */
+.product-detail-no-image {
+    background-color: #f8f9fa; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6c757d;
+    font-size: 1.2rem;
+    text-align: center;
+}
