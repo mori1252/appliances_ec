@@ -16,3 +16,46 @@
     font-size: 1.2rem;
     text-align: center;
 }
+
+/* カート画面のスタイル */
+.cart-title {
+    margin-top: 20px;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.cart-list {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 20px;
+}
+
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #ccc;
+    padding: 10px 0;
+}
+
+.cart-product {
+    font-size: 1rem;
+}
+
+.cart-price {
+    font-weight: bold;
+    color: #007bff;
+}
+
+.cart-total-box {
+    text-align: right;
+    margin-bottom: 20px;
+}
+
+.cart-total {
+    font-size: 1.2rem;
+}
+
+.cart-actions {
+    text-align: right;
+}

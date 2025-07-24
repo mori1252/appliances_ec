@@ -1,8 +1,18 @@
 from django.db import models
+from django.utils.text import slugify
+import unicodedata
 
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
-    slug = models.SlugField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=100, unique=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        # slug が空なら name から生成
+        if not self.slug:
+            normalized_name = unicodedata.normalize('NFKC', self.name)
+            self.slug = slugify(normalized_name)
+        super().save(*args, **kwargs)
+
 
     class Meta:
         verbose_name = 'category'
@@ -11,8 +21,3 @@ class Category(models.Model):
 
     def __str__(self):
         return self.name
-    
-    # 必要に応じて、URLを取得するメソッドを追加することもできます
-    # from django.urls import reverse
-    # def get_absolute_url(self):
-    #    return reverse('products:list_by_category', args=[self.slug])

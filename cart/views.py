@@ -1,29 +1,59 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from products.models import Product
+from .models import Cart, CartItem
 
-#カートの詳細を表示するビュー
+def _get_cart(request):
+    #ログインユーザーまたはセッションキーからカートを取得・作成
+    if request.user.is_authenticated:
+        cart, created = Cart.objects.get_or_create(user=request.user)
+    else:
+        session_key = request.session.session_key
+        if not session_key:
+            request.session.create()
+            session_key = request.session.session_key
+        cart, created = Cart.objects.get_or_create(session_key=session_key)
+    return cart
+
 def cart_detail(request):
-    #ここにカートの中身を取得して表示するロジックを記述します
-    #例:cart_items = CartItem.objects.filter(cart__user=request.user)など
-    context = {
-        'cart_items': [], #仮の空リスト
-        'total_price': 0, #仮の合計金額
-    }
-    return render(request, 'cart/cart_detail.html', context)
+    cart = _get_cart(request)
+    items = cart.items.select_related('product') if cart else []
+    total = sum(item.get_total_price() for item in items)
+    return render(request, 'cart/cart_detail.html', {
+        'cart': cart,
+        'items': items,
+        'total': total,
+    })
 
-#商品をカートに追加するビュー(urls.pyで定義されている場合)
-def cart_add(request, product_id):
-#ここに商品をカートに追加するロジックを記述します
-#例:product = get_object_or_404(Product, id=product_id)
-#   cart = get_or_create_cart(request.user)
-#   CartItem.objects.create(cart=cart, product=product, quantity=1)
-    return redirect('cart:detail') #カート詳細ページにリダイレクト
+def add_to_cart(request, product_id):
+    cart = _get_cart(request)
+    product = get_object_or_404(Product, id=product_id)
 
-#カートから商品を削除するビュー(urls.pyで定義されている場合)
-def cart_remove(request, product_id):
-    #ここにカートから商品を削除するロジックを記述します
-    return redirect('cart:detail')
+    #すでにカートに入っている場合は数量を増やす
+    cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product)
+    if not created:
+        cart_item.quantity += 1
+        cart_item.save()
 
-#カートの商品数量を更新するビュー(urls.pyで定義されている場合)
-def cart_update(request, product_id):
-    #ここにカートの商品数量を更新するロジックを記述します
-    return redirect('cart:detail')
+    return redirect('cart:cart_detail')
+
+def remove_from_cart(request, item_id):
+    item = get_object_or_404(CartItem, id=item_id)
+    item.delete()
+    return redirect('cart:cart_detail')
+
+def update_cart_item_quantity(request, item_id):
+    # POSTで数量を更新（例：フォーム送信）
+    item = get_object_or_404(CartItem, id=item_id)
+    if request.method == 'POST':
+        try:
+            new_quantity = int(request.POST.get('quantity', 1))
+            if new_quantity > 0:
+                item.quantity = new_quantity
+                item.save()
+            else:
+                item.delete() # 数量0は削除扱い
+        except ValueError:
+            pass # 不正な数値が送られた場合は何もしない
+    return redirect('cart:cart_detail')
+

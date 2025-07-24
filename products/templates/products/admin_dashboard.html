@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>商品管理(管理者用)</h1>
+
+<form method="get">
+    <input type="text" name="search" placeholder="商品名で検索" value="{{ search_query }}">
+    <button type="submit">検索</button>
+</form>
+
+<table>
+    <thead>
+        <tr>
+            <th>商品名</th>
+            <th>価格</th>
+            <th>操作</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for product in products %}
+        <tr>
+            <td>{{ product.name }}</td>
+            <td>{{ product.price }}</td>
+            <td>
+                <a href="{% url 'product_edit' %}">編集</a>
+                <form method="post" action="{% url 'product_delete' product.id %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit" onclick="return confirm('本当に削除しますか？');">削除</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<a href="{% url 'product_add' %}">新規商品登録</a>
+
+{% endblock %}

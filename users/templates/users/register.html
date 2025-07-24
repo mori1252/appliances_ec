@@ -1,12 +1,36 @@
-{% extends 'base.html' %}
-{% block title %}ユーザー登録{% endblock %}
+{% extends "base.html" %}
+{% load static %}
 
 {% block content %}
-    <h2>ユーザー登録</h2>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">登録</button>
-    </form>
-    <p>すでにアカウントをお持ちの方はこちら<a href="{% url 'users:login' %}">ログイン</a></p>
+<h2>新規会員登録</h2>
+
+<!-- エラー表示 -->
+{% if form.errors %}
+    <ul class="errorlist">
+        {% for field in form %}
+            {% for error in field.errors %}
+                <li>{{ field.label }}: {{ error }}</li>
+            {% endfor %}
+        {% endfor %}
+        {% for error in form.non_field_errors %}
+            <li>{{ error }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+
+    <h3>初期住所情報（任意）</h3>
+    {{ address_form.as_p }}
+
+    <label>
+        <input type="checkbox" name="save_address"> この住所を保存する
+    </label>
+
+    <br><br>
+    <button type="submit">登録</button>
+</form>
+
 {% endblock %}

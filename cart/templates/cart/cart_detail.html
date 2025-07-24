@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}カート詳細{% endblock %}
+
+{% block content %}
+<h2>カート詳細</h2>
+{% if cart %}
+    <ul class="list-group mb-3">
+        {% for item in items %}
+            <li class="cart-item">
+                <span class="cart-product">{{ item.product.name }} ({{ item.quantity }} 個)</span>
+                <span class="cart-price">￥{{ item.total_price }}</span>
+            </li>
+        {% endfor %}
+    </ul>
+
+    <div class="cart-total-box">
+        <strong class="cart-total">合計金額:￥{{ cart.get_total_price }}</strong>
+    </div>
+
+    <div class="cart-actions">
+        <a href="{% url 'orders:create' %}" class="btn btn-primary">注文に進む</a>
+    </div>
+{% else %}
+    <p>カートは空です。</p>
+{% endif %}
+{% endblock %}

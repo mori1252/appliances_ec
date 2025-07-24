@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<h2>マイページ</h2>
+
+<!-- メッセージ表示 -->
+{% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+<!-- ユーザー情報 -->
+<h3>ユーザー情報</h3>
+<form method="post">
+    {% csrf_token %}
+    {{ user_form.as_p }}
+    <button type="submit" name="update_user">ユーザー情報を更新</button>
+</form>
+
+<!-- パスワード変更 -->
+<h3>パスワード変更</h3>
+<form method="post">
+    {% csrf_token %}
+    {{ password_form.as_p }}
+    <button type="submit" name="change_password">パスワードを変更</button>
+</form>
+
+<!-- 登録住所一覧 -->
+<h3>登録住所一覧</h3>
+{% if addresses %}
+    <ul>
+        {% for address in addresses %}
+        <li>
+            {{ address.postal_code }} {{ address.prefecture }} {{ address.city }} {{ address.detail }}
+            <a href="{% url 'users:delete_address' address.id %}" onclick="return confirm('本当に削除しますか？');">削除</a>
+        </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>登録されている住所はありません。</p>
+{% endif %}
+
+<!-- 新しい住所の追加 -->
+<h3>住所を追加</h3>
+<form method="post">
+    {% csrf_token %}
+    {{ address_form.as_p }}
+    <button type="submit" name="add_address">住所を追加</button>
+</form>
+
+{% endblock %}
