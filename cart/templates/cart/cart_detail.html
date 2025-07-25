@@ -7,10 +7,19 @@
 {% if cart %}
     <ul class="list-group mb-3">
         {% for item in items %}
-            <li class="cart-item">
-                <span class="cart-product">{{ item.product.name }} ({{ item.quantity }} 個)</span>
-                <span class="cart-price">￥{{ item.total_price }}</span>
-            </li>
+            <div class="cart-item">
+                <p>{{ item.product.name }}</p>
+                <form method="post" action="{% url 'cart:update_cart_item_quantity' item.id %}">
+                    {% csrf_token %}
+                    <button type="submit" name="quantity" value="{{ item.quantity|add:"-1" }}">−</button>
+                    <span>{{ item.quantity }}</span>
+                    <button type="submit" name="quantity" value="{{ item.quantity|add:"1" }}">＋</button>
+                </form>
+                <form method="post" action="{% url 'cart:remove_from_cart' item.id %}" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit">削除</button>
+                </form>
+            </div>
         {% endfor %}
     </ul>
 
@@ -21,6 +30,9 @@
     <div class="cart-actions">
         <a href="{% url 'orders:create' %}" class="btn btn-primary">注文に進む</a>
     </div>
+
+    <a href="{% url 'products:list' %}" class="btn btn-secondary">商品一覧に戻る</a>
+
 {% else %}
     <p>カートは空です。</p>
 {% endif %}

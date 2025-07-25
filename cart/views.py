@@ -4,16 +4,35 @@ from products.models import Product
 from .models import Cart, CartItem
 
 def _get_cart(request):
-    #ログインユーザーまたはセッションキーからカートを取得・作成
+    print("=== _get_cart called ===")
+    
     if request.user.is_authenticated:
+        print(f"ログインユーザー: {request.user}")
         cart, created = Cart.objects.get_or_create(user=request.user)
+        print(f"カート取得: {cart}（新規作成: {created}）")
     else:
         session_key = request.session.session_key
+        print(f"初期セッションキー: {session_key}")
+
         if not session_key:
             request.session.create()
             session_key = request.session.session_key
-        cart, created = Cart.objects.get_or_create(session_key=session_key)
+            print(f"新規セッションキー作成: {session_key}")
+
+        # セッション保存（念のため）
+        request.session.modified = True
+        request.session.save()
+
+        if session_key:
+            cart, created = Cart.objects.get_or_create(session_key=session_key)
+            print(f"ゲスト用カート取得: {cart}（新規作成: {created}）")
+        else:
+            print("セッションキーが取得できませんでした")
+            cart = None
+
     return cart
+
+
 
 def cart_detail(request):
     cart = _get_cart(request)

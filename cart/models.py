@@ -5,10 +5,13 @@ from decimal import Decimal
 
 class Cart(models.Model):
     user = models.ForeignKey(CustomUser, null=True, blank=True, on_delete=models.CASCADE, related_name='carts')
-    session_key = models.CharField(max_length=40, null=True, blank=True)
+    session_key = models.CharField(max_length=40, null=True, blank=True, unique=True)
 
     def __str__(self):
         return f"Cart {self.id} (User: {self.user}, Session: {self.session_key})"
+    
+    def get_total_price(self):
+        return sum(item.get_total_price() for item in self.items.all())
     
 class CartItem(models.Model):
     cart = models.ForeignKey(Cart, related_name='items', on_delete=models.CASCADE)

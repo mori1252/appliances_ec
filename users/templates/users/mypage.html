@@ -2,54 +2,83 @@
 {% load static %}
 
 {% block content %}
-<h2>マイページ</h2>
+<div class="container mt-5" style="max-width: 600px;">
+    <h2 class="mb-4 text-center">マイページ</h2>
 
-<!-- メッセージ表示 -->
-{% if messages %}
-    <ul class="messages">
+    <!-- メッセージ表示 -->
+    {% if messages %}
         {% for message in messages %}
-        <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="閉じる"></button>
+            </div>
         {% endfor %}
-    </ul>
-{% endif %}
+    {% endif %}
 
-<!-- ユーザー情報 -->
-<h3>ユーザー情報</h3>
-<form method="post">
-    {% csrf_token %}
-    {{ user_form.as_p }}
-    <button type="submit" name="update_user">ユーザー情報を更新</button>
-</form>
+    <form method="post" novalidate style="text-align: center;">
+        {% csrf_token %}
 
-<!-- パスワード変更 -->
-<h3>パスワード変更</h3>
-<form method="post">
-    {% csrf_token %}
-    {{ password_form.as_p }}
-    <button type="submit" name="change_password">パスワードを変更</button>
-</form>
-
-<!-- 登録住所一覧 -->
-<h3>登録住所一覧</h3>
-{% if addresses %}
-    <ul>
-        {% for address in addresses %}
-        <li>
-            {{ address.postal_code }} {{ address.prefecture }} {{ address.city }} {{ address.detail }}
-            <a href="{% url 'users:delete_address' address.id %}" onclick="return confirm('本当に削除しますか？');">削除</a>
-        </li>
+        {% for field in user_form %}
+            <div class="mb-3">
+                <label for="{{ field.id_for_label }}" class="form-label d-block text-center">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                    <small class="form-text text-muted d-block">{{ field.help_text }}</small>
+                {% endif %}
+                {% if field.errors %}
+                    <div class="text-danger small">{{ field.errors|striptags }}</div>
+                {% endif %}
+            </div>
         {% endfor %}
-    </ul>
-{% else %}
-    <p>登録されている住所はありません。</p>
-{% endif %}
 
-<!-- 新しい住所の追加 -->
-<h3>住所を追加</h3>
-<form method="post">
-    {% csrf_token %}
-    {{ address_form.as_p }}
-    <button type="submit" name="add_address">住所を追加</button>
-</form>
+        {% for field in password_form %}
+            <div class="mb-3">
+                <label for="{{ field.id_for_label }}" class="form-label d-block text-center">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                    <small class="form-text text-muted d-block">{{ field.help_text }}</small>
+                {% endif %}
+                {% if field.errors %}
+                    <div class="text-danger small">{{ field.errors|striptags }}</div>
+                {% endif %}
+            </div>
+        {% endfor %}
 
+        {% for field in address_form %}
+            <div class="mb-3">
+                <label for="{{ field.id_for_label }}" class="form-label d-block text-center">{{ field.label }}</label>
+                {{ field }}
+                {% if field.help_text %}
+                    <small class="form-text text-muted d-block">{{ field.help_text }}</small>
+                {% endif %}
+                {% if field.errors %}
+                    <div class="text-danger small">{{ field.errors|striptags }}</div>
+                {% endif %}
+            </div>
+        {% endfor %}
+
+        <!-- 登録住所一覧 -->
+        <div class="mt-5 mb-3">
+            {% if addresses %}
+                <ul class="list-group">
+                    {% for address in addresses %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ address.postal_code }} {{ address.prefecture }} {{ address.city }} {{ address.detail|default:"" }}
+                            <form method="post" action="{% url 'users:delete_address' address.id %}" onsubmit="return confirm('本当に削除しますか？');" style="margin:0;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm">削除</button>
+                            </form>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>登録されている住所はありません。</p>
+            {% endif %}
+        </div>
+
+        <div class="d-grid mt-4" style="max-width: 120px; margin: 0 auto;">
+            <button type="submit" class="btn btn-primary">更新</button>
+        </div>
+    </form>
+</div>
 {% endblock %}

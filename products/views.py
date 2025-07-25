@@ -1,24 +1,17 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
-from .models import Product
 from categories.models import Category
+from .models import Product
 from .forms import ProductForm
-from django.urls import reverse
 
-def product_list(request, category_slug=None):
-    category = None
+def product_list(request):
     categories = Category.objects.all()
-    #商品一覧を取得するロジック
-    products = Product.objects.all()
-    
-    if category_slug:
-        category = get_object_or_404(Category, slug=category_slug)
-        products = products.filter(category=category)
-
+    category_products = []
+    for category in categories:
+        products = Product.objects.filter(category=category)
+        category_products.append((category, products))
     return render(request, 'products/product_list.html', {
-        'category': category,
-        'categories': categories,
-        'products': products
+        'category_products': category_products
     })
 
 def product_detail(request, id, slug):

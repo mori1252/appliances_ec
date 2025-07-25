@@ -1,59 +1,39 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from cart.models import CartItem
-from .models import Order, OrderItem
 from django.db import transaction
+from cart.models import CartItem
+from cart.views import _get_cart
+from users.models import Address
+from .models import Order, OrderItem
 
 @login_required
 def create_order(request):
-    cart = request.user.carts.first()
-    if not cart:
-        return redirect('cart:cart_detail')
-
+    cart = _get_cart(request)
     cart_items = CartItem.objects.filter(cart=cart)
+
     if not cart_items.exists():
         return redirect('cart:cart_detail')
-    
+
     if request.method == 'POST':
-        selected = request.POST.get('selected_address')
+        selected = request.POST.get('address')
 
-        # 新しい住所を入力した場合
         if selected == 'new':
-            postal_code = request.POST.get('postal_code')
-            prefecture = request.POST.get('prefecture')
-            city = request.POST.get('city')
-            detail = request.POST.get('detail')
+            fields = ['postal_code', 'prefecture', 'city', 'street', 'building']
+            data = {field: request.POST.get(field) for field in fields}
 
-            if not all([postal_code,prefecture, city, detail]):
+            if not all(data.values()):
                 return render(request, 'orders/order_confirm.html', {
                     'cart_items': cart_items,
                     'total_price': sum(item.product.price * item.quantity for item in cart_items),
-                    'address_error': 'すべての住所項目を入力してください。',
-                    'addresses': request.user.address_set.all()
+                    'addresses': request.user.addresses.all(),
+                    'address_error': 'すべての住所項目を入力してください。'
                 })
-            
-            # チェックボックスがオンなら保存
-            if request.POST.get('save_address'):
-                new_address = Address.objects.create(
-                    user=request.user,
-                    postal_code=postal_code,
-                    prefecture=prefecture,
-                    city=city,
-                    detail=detail
-                )
-            else:
-                new_address = Address(
-                    postal_code=postal_code,
-                    prefecture=prefecture,
-                    city=city,
-                    detail=detail
-                )
 
-            used_address = new_address
-
+            used_address = Address.objects.create(user=request.user, **data) if 'save_address' in request.POST else Address(**data)
+            if not used_address.pk:
+                used_address.save()
         else:
             used_address = Address.objects.get(id=selected, user=request.user)
-
 
         with transaction.atomic():
             order = Order.objects.create(
@@ -62,24 +42,19 @@ def create_order(request):
                 address=used_address
             )
 
-            for item in cart_items:
-                OrderItem.objects.create(
-                    order=order,
-                    product=item.product,
-                    quantity=item.quantity,
-                    price=item.product.price
-                )
+            OrderItem.objects.bulk_create([
+                OrderItem(order=order, product=item.product, quantity=item.quantity, price=item.product.price)
+                for item in cart_items
+            ])
 
-            cart_items.delete() # カートを空にする
+            cart_items.delete()
 
         return render(request, 'orders/order_complete.html', {'order': order})
-    
-    else:
-        # GETなら確認ページを表示
-        total_price = sum(item.product.price * item.quantity for item in cart_items)
-        address = request.user.profile.address
-        return render(request, 'orders/order_confirm.html', {
-            'cart_items': cart_items,
-            'total_price': total_price,
-            'address': address
-        })
+
+    total_price = sum(item.product.price * item.quantity for item in cart_items)
+    addresses = request.user.addresses.all()
+    return render(request, 'orders/order_confirm.html', {
+        'cart_items': cart_items,
+        'total_price': total_price,
+        'addresses': addresses
+    })

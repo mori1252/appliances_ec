@@ -2,35 +2,79 @@
 {% load static %}
 
 {% block content %}
-<h2>新規会員登録</h2>
+<div class="container mt-5" style="max-width: 600px;">
+    <h2 class="mb-4 text-center">新規会員登録</h2>
 
-<!-- エラー表示 -->
-{% if form.errors %}
-    <ul class="errorlist">
+    {% if form.non_field_errors or address_form.non_field_errors %}
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+                {% for error in address_form.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
         {% for field in form %}
-            {% for error in field.errors %}
-                <li>{{ field.label }}: {{ error }}</li>
-            {% endfor %}
+            <div class="mb-3 text-center" style="max-width: 300px; margin: 0 auto;">
+                <label for="{{ field.id_for_label }}" class="form-label d-block">
+                    {% if field.name == 'username' %}
+                        ユーザー ネーム
+                    {% elif field.name == 'email' %}
+                        メール アドレス
+                    {% else %}
+                        {{ field.label }}
+                    {% endif %}
+                </label>
+
+                {% if field.name == 'password1' or field.name == 'password2' %}
+                    <div style="position: relative;">
+                        {{ field }}
+                        <span class="text-muted small" style="position: absolute; top: 50%; left: 100%; transform: translate(8px, -50%); white-space: nowrap;">
+                            {% if field.name == 'password1' %}
+                                8文字以上で、英字と数字を含めてください
+                            {% elif field.name == 'password2' %}
+                                確認のため、もう一度入力してください
+                            {% endif %}
+                        </span>
+                    </div>
+                {% else %}
+                    {{ field }}
+                    {% if field.help_text %}
+                        <small class="form-text text-muted">{{ field.help_text }}</small>
+                    {% endif %}
+                {% endif %}
+
+                {% if field.errors %}
+                    <div class="text-danger small">{{ field.errors|striptags }}</div>
+                {% endif %}
+            </div>
         {% endfor %}
-        {% for error in form.non_field_errors %}
-            <li>{{ error }}</li>
+
+        {% for field in address_form %}
+            {% if field.name != 'is_default' %}
+                <div class="mb-3 text-center">  {# ラベル・入力中央寄せ #}
+                    <label for="{{ field.id_for_label }}" class="form-label d-block">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <small class="form-text text-muted">{{ field.help_text }}</small>
+                    {% endif %}
+                    {% if field.errors %}
+                        <div class="text-danger small">{{ field.errors|striptags }}</div>
+                    {% endif %}
+                </div>
+            {% endif %}
         {% endfor %}
-    </ul>
-{% endif %}
 
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-
-    <h3>初期住所情報（任意）</h3>
-    {{ address_form.as_p }}
-
-    <label>
-        <input type="checkbox" name="save_address"> この住所を保存する
-    </label>
-
-    <br><br>
-    <button type="submit">登録</button>
-</form>
-
+        <div class="mt-5 text-center">
+            <button type="submit" class="btn btn-primary btn-lg">登録する</button>
+        </div>
+    </form>
+</div>
 {% endblock %}
