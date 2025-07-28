@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth import get_user_model
 from users.models import Address, CustomUser
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, PasswordChangeForm
 
 User = get_user_model()
 
@@ -16,6 +16,12 @@ class CustomUserCreationForm(UserCreationForm):
             'password1': 'パスワード',
             'password2': 'パスワード（確認用）',
         }
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'form-control text-center'}),
+            'mail_address': forms.EmailInput(attrs={'class': 'form-control text-center'}),
+            'password1': forms.PasswordInput(attrs={'class': 'form-control text-center'}),
+            'password2': forms.PasswordInput(attrs={'class': 'form-control text-center'}),
+        }
 
 class CustomLoginForm(AuthenticationForm):
     username = forms.CharField(
@@ -25,6 +31,10 @@ class CustomLoginForm(AuthenticationForm):
     password = forms.CharField(
         label='パスワード',
         widget=forms.PasswordInput
+    )
+    password = forms.CharField(
+        label='パスワード',
+        widget=forms.PasswordInput(attrs={'class': 'form-control text-center'})
     )
 
 # ユーザー情報変更フォーム（ラベル追加）
@@ -36,22 +46,26 @@ class UserUpdateForm(forms.ModelForm):
             'username': 'ユーザーネーム',
             'mail_address': 'メールアドレス',
         }
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'form-control text-center'}),
+            'mail_address': forms.EmailInput(attrs={'class': 'form-control text-center'}),
+        }
 
-class PasswordUpdateForm(forms.Form):
-    current_password = forms.CharField(label='現在のパスワード', widget=forms.PasswordInput)
-    new_password = forms.CharField(label='新しいパスワード', widget=forms.PasswordInput)
-    confirm_password = forms.CharField(label='新しいパスワード(確認用)',widget=forms.PasswordInput)
+# パスワード更新フォーム
+class PasswordUpdateForm(PasswordChangeForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # ここでラベルやウィジェットのカスタマイズも可能
+        self.fields['old_password'].label = "現在のパスワード"
+        self.fields['new_password1'].label = "新しいパスワード"
+        self.fields['new_password2'].label = "新しいパスワード（確認用）"
+        
+        for field in self.fields.values():
+            field.widget.attrs.update({'class': 'form-control text-center'})
 
-    def clean(self):
-        cleaned_data = super().clean()
-        new_password = cleaned_data.get('new_password')
-        confirm_password = cleaned_data.get('confirm_password')
 
-        if new_password and confirm_password and new_password != confirm_password:
-            raise forms.ValidationError('新しいパスワードが一致しません。')
         
 class AddressForm(forms.ModelForm):
-
     class Meta:
         model = Address
         fields = ['postal_code', 'prefecture', 'city', 'street', 'building']
@@ -61,4 +75,11 @@ class AddressForm(forms.ModelForm):
             'city': '市区町村',
             'street': '番地・丁目',
             'building': '建物名・部屋番号',
+        }
+        widgets = {
+            'postal_code': forms.TextInput(attrs={'class': 'form-control text-center'}),
+            'prefecture': forms.TextInput(attrs={'class': 'form-control text-center'}),
+            'city': forms.TextInput(attrs={'class': 'form-control text-center'}),
+            'street': forms.TextInput(attrs={'class': 'form-control text-center'}),
+            'building': forms.TextInput(attrs={'class': 'form-control text-center'}),
         }

@@ -59,3 +59,34 @@
 .cart-actions {
     text-align: right;
 }
+
+.toggle-section {
+    display: none;
+    padding: 0.5rem 0;
+    border: none;
+    background: transparent;
+}
+
+.toggle-button {
+    font-size: 0.9rem;
+    color: #666;
+    padding-left: 0;
+    text-decoration: underline;
+}
+
+.section-title {
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 0.3rem;
+    margin-top: 1.5rem;
+}
+
+.toggle-section.show {
+    display: block;
+}
+
+
+/* すべての form-control を中央寄せ */
+.form-control {
+    text-align: center;
+}
+
