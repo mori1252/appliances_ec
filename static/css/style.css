@@ -90,3 +90,7 @@
     text-align: center;
 }
 
+.container {
+    max-width: 900px;
+}
+

@@ -14,6 +14,17 @@ def create_order(request):
     if not cart_items.exists():
         return redirect('cart:cart_detail')
 
+    # 商品ごとの小計を計算したデータを作成
+    cart_items_with_subtotals = [
+        {
+            'item': item,
+            'subtotal': item.product.price * item.quantity
+        }
+        for item in cart_items
+    ]
+    total_price = sum(data['subtotal'] for data in cart_items_with_subtotals)
+    addresses = request.user.addresses.all()
+    
     if request.method == 'POST':
         selected = request.POST.get('address')
 

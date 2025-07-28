@@ -134,67 +134,71 @@ def user_mypage(request):
     addresses = Address.objects.filter(user=user)
     default_address = addresses.filter(is_default=True).first()
 
-    # フォーム初期化
-    user_form = UserUpdateForm(instance=user)
-    password_form = PasswordUpdateForm(user, data=None)
-    address_form = AddressForm(instance=default_address if default_address else None)
-    new_address_form = AddressForm()
-
     if request.method == 'POST':
-        if 'save_password' in request.POST:
-            password_form = PasswordUpdateForm(user, request.POST)
+        if 'update_all' in request.POST:
+            user_form = UserUpdateForm(request.POST, instance=user, prefix='user')
+            address_form = AddressForm(request.POST, instance=default_address, prefix='address')
+            password_form = PasswordUpdateForm(user, prefix='password')
+            new_address_form = AddressForm(prefix='newaddress')
+
+            if user_form.is_valid() and address_form.is_valid():
+                user_form.save()
+                address = address_form.save(commit=False)
+                address.user = user
+                address.is_default = True
+                address.save()
+                if 'address-is_default' in request.POST:
+                    set_default_address(user, address)
+                messages.success(request, 'ユーザー情報と住所を更新しました。')
+                return redirect('users:mypage')
+            else:
+                messages.error(request, 'ユーザー情報または住所の更新に失敗しました。')
+
+        elif 'save_password' in request.POST:
+            password_form = PasswordUpdateForm(user, request.POST, prefix='password')
+            user_form = UserUpdateForm(instance=user, prefix='user')
+            address_form = AddressForm(instance=default_address, prefix='address')
+            new_address_form = AddressForm(prefix='newaddress')
+
             if password_form.is_valid():
                 password_form.save()
                 update_session_auth_hash(request, user)
                 messages.success(request, 'パスワードを更新しました。')
                 return redirect('users:mypage')
             else:
-                messages.error(request, 'パスワードを更新に失敗しました。')
-        
+                messages.error(request, 'パスワードの更新に失敗しました。')
+
         elif 'save_new_address' in request.POST:
-            new_address_form = AddressForm(request.POST)
+            new_address_form = AddressForm(request.POST, prefix='newaddress')
+            user_form = UserUpdateForm(instance=user, prefix='user')
+            address_form = AddressForm(instance=default_address, prefix='address')
+            password_form = PasswordUpdateForm(user, prefix='password')
+
             if new_address_form.is_valid():
                 new_address = new_address_form.save(commit=False)
                 new_address.user = user
                 new_address.save()
-                # チェックが入っていたらデフォルトに設定
-                if 'new_is_default' in request.POST:
+                if 'newaddress-new_is_default' in request.POST:
                     set_default_address(user, new_address)
                 messages.success(request, '新しい住所を追加しました。')
                 return redirect('users:mypage')
             else:
                 messages.error(request, '新しい住所の追加に失敗しました。')
+    else:
+        user_form = UserUpdateForm(instance=user, prefix='user')
+        password_form = PasswordUpdateForm(user, prefix='password')
+        address_form = AddressForm(instance=default_address, prefix='address')
+        new_address_form = AddressForm(prefix='newaddress')
 
-        elif 'update_all' in request.POST:
-
-            user_form = UserUpdateForm(request.POST, instance=user)
-            address_form = AddressForm(request.POST, instance=default_address)
-
-            if user_form.is_valid() and address_form.is_valid():
-                user_form.save()
-
-                address = address_form.save(commit=False)
-                address.user = user
-                address.is_default = True
-                address.save()
-                # チェックが入っていたらデフォルトに設定
-                if 'new_is_default' in request.POST:
-                    set_default_address(user, new_address)
-                messages.success(request, 'ユーザー情報と住所を更新しました。')
-                return redirect('users:mypage')
-        else:
-            messages.error(request, 'ユーザー情報または住所の更新に失敗しました。')
-
-    addresses_json = json.dumps([
-    {
+    # 住所のJSON生成もフィールド名が変わるので必要に応じて修正してください
+    addresses_json = json.dumps([{
         'id': addr.id,
         'postal_code': addr.postal_code,
         'prefecture': addr.prefecture,
         'city': addr.city,
         'street': addr.street,
         'building': addr.building,
-    } for addr in addresses
-])
+    } for addr in addresses])
 
     return render(request, 'users/mypage.html', {
         'user_form': user_form,

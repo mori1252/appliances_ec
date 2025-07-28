@@ -1,39 +1,83 @@
 {% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
 
 {% block title %}カート詳細{% endblock %}
 
 {% block content %}
-<h2>カート詳細</h2>
-{% if cart %}
-    <ul class="list-group mb-3">
-        {% for item in items %}
-            <div class="cart-item">
-                <p>{{ item.product.name }}</p>
-                <form method="post" action="{% url 'cart:update_cart_item_quantity' item.id %}">
-                    {% csrf_token %}
-                    <button type="submit" name="quantity" value="{{ item.quantity|add:"-1" }}">−</button>
-                    <span>{{ item.quantity }}</span>
-                    <button type="submit" name="quantity" value="{{ item.quantity|add:"1" }}">＋</button>
-                </form>
-                <form method="post" action="{% url 'cart:remove_from_cart' item.id %}" style="display:inline;">
-                    {% csrf_token %}
-                    <button type="submit">削除</button>
-                </form>
+<div class="container mt-5">
+    <h2 class="mb-4 text-center">ショッピングカート</h2>
+
+    {% if cart and items %}
+    <div class="row">
+        <!-- 左カラム：カート内商品 -->
+        <div class="col-lg-8">
+            {% for item in items %}
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <!-- 商品画像 -->
+                        <div class="col-md-2 text-center">
+                            <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="img-fluid rounded" style="max-height: 80px;">
+                        </div>
+
+                        <!-- 商品名と価格 -->
+                        <div class="col-md-4">
+                            <h5>{{ item.product.name }}</h5>
+                            <p class="text-muted mb-1">¥{{ item.product.price|intcomma }}</p>
+                            <!-- 小計 -->
+                            <p class="mb-0"><strong>小計: ¥{{ item.get_total_price|floatformat:0|intcomma }}</strong></p>
+                        </div>
+
+                        <!-- 数量調整 -->
+                        <div class="col-md-3 text-center">
+                            <form method="post" action="{% url 'cart:update_cart_item_quantity' item.id %}" class="d-flex justify-content-center align-items-center">
+                                {% csrf_token %}
+                                <div class="input-group input-group-sm">
+                                    <button type="submit" name="quantity" value="{{ item.quantity|add:'-1' }}" class="btn btn-outline-secondary" {% if item.quantity <= 1 %}disabled{% endif %}>−</button>
+                                    <input type="text" class="form-control text-center" value="{{ item.quantity }}" readonly style="max-width: 50px;">
+                                    <button type="submit" name="quantity" value="{{ item.quantity|add:'1' }}" class="btn btn-outline-secondary">＋</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- 削除ボタン -->
+                        <div class="col-md-3 text-end">
+                            <form method="post" action="{% url 'cart:remove_from_cart' item.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger">削除</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             </div>
-        {% endfor %}
-    </ul>
+            {% endfor %}
+        </div>
 
-    <div class="cart-total-box">
-        <strong class="cart-total">合計金額:￥{{ cart.get_total_price }}</strong>
+        <!-- 右カラム：合計金額・注文 -->
+        <div class="col-lg-4">
+            <div class="card bg-light p-3">
+                <h5 class="text-center">注文内容</h5>
+                <hr>
+                <div class="d-flex justify-content-between">
+                    <span>商品点数</span>
+                    <span>{{ items|length }}点</span>
+                </div>
+                <hr>
+                <div class="d-flex justify-content-between mb-3">
+                    <strong>合計金額</strong>
+                    <strong>¥{{ cart.get_total_price|floatformat:0|intcomma }}</strong>
+                </div>
+                <a href="{% url 'orders:create' %}" class="btn btn-primary w-100">注文に進む</a>
+                <a href="{% url 'products:list' %}" class="btn btn-outline-secondary w-100 mt-2">商品一覧に戻る</a>
+            </div>
+        </div>
     </div>
-
-    <div class="cart-actions">
-        <a href="{% url 'orders:create' %}" class="btn btn-primary">注文に進む</a>
+    {% else %}
+    <p class="text-center">カートは空です。</p>
+    <div class="text-center mt-4">
+        <a href="{% url 'products:list' %}" class="btn btn-secondary">商品一覧に戻る</a>
     </div>
-
-    <a href="{% url 'products:list' %}" class="btn btn-secondary">商品一覧に戻る</a>
-
-{% else %}
-    <p>カートは空です。</p>
-{% endif %}
+    {% endif %}
+</div>
 {% endblock %}

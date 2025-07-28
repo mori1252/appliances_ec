@@ -1,45 +1,66 @@
 {% extends "base.html" %}
 {% load static %}
+{% load humanize %}
+
+{% block title %}注文確認{% endblock %}
 
 {% block content %}
-    <h2>注文確認ページ</h2>
+<div class="container mt-5" style="max-width: 800px;">
+    <div class="card p-4 shadow mx-auto">
+        <h2 class="mb-4 text-center">注文内容確認</h2>
 
-    {% if address_error %}
-    <div class="alert alert-danger">{{ address_error }}</div>
-    {% endif %}
+        <!-- カート商品表示 -->
+        <div class="mb-4">
+            {% for item in cart_items %}
+                <div class="d-flex align-items-center mb-3 border-bottom pb-3 justify-content-center">
+                    <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" 
+                         style="width: 80px; height: 80px; object-fit: cover;" 
+                         class="me-3 border rounded">
+                    <div class="text-start">
+                        <h5 class="mb-1">{{ item.product.name }}</h5>
+                        <p class="mb-1">数量: {{ item.quantity }}</p>
+                        <p class="mb-0">
+                            小計: ¥{{ item.get_total_price|floatformat:0|intcomma }}
+                        </p>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
 
-    {% if messages %}
-    {% for message in messages %}
-        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-    {% endfor %}
-    {% endif %}
+        <!-- 合計金額 -->
+        <div class="mb-4 text-center">
+            <h5>合計金額: <strong>¥{{ total_price|floatformat:0|intcomma }}</strong></h5>
+        </div>
 
-    <h4>カートの商品</h4>
-    <ul class="list-group mb-3">
-    {% for item in cart_items %}
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-        {{ item.product.name }} - {{ item.quantity }} 個
-        </li>
-    {% endfor %}
-    </ul>
+        <!-- 配送先選択 -->
+        <form method="post" novalidate class="mx-auto" style="max-width: 400px;">
+            {% csrf_token %}
 
-    <p><strong>合計金額: ￥{{ total_price|floatformat:2 }}</strong></p>
+            <div class="mb-3 text-center">
+                <label for="address" class="form-label d-block mb-2">配送先住所</label>
+                <select name="address" id="address" class="form-select mx-auto" required style="max-width: 300px;">
+                    {% for address in addresses %}
+                        <option value="{{ address.id }}">{{ address }}</option>
+                    {% endfor %}
+                </select>
+            </div>
 
-    <form method="post" action="{% url 'orders:create' %}">
-    {% csrf_token %}
+            <!-- 新しい住所登録案内 -->
+            <div class="mb-4 text-center">
+                <p class="mb-1">別の住所を追加したい方はこちら:</p>
+                <a href="{% url 'users:mypage' %}" class="btn btn-outline-secondary btn-sm">マイページで住所を追加</a>
+            </div>
 
-    <h3>配送先住所を選択してください</h3>
-    {% for address in addresses %}
-        <label>
-        <input type="radio" name="address" value="{{ address.id }}" required>
-        {{ address.prefecture }} {{ address.city }} {{ address.street }} {{ address.building }} ({{ address.postal_code }})
-        </label><br>
-    {% endfor %}
+            <!-- エラー表示 -->
+            {% if address_error %}
+                <div class="alert alert-danger text-center">{{ address_error }}</div>
+            {% endif %}
 
-    <p class="mt-3">
-        新しい住所を登録したい方は <a href="{% url 'users:mypage' %}">こちら</a> から事前に登録してください。
-    </p>
-
-    <button type="submit" class="btn btn-primary mt-3">注文確定</button>
-    </form>
+            <!-- 注文確定ボタン -->
+            <div class="text-center">
+                <button type="submit" class="btn btn-primary px-5">注文確定</button>
+            </div>
+        </form>
+    </div>
+</div>
 {% endblock %}

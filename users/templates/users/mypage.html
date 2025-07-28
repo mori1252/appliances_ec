@@ -4,127 +4,138 @@
 {% block title %}マイページ{% endblock %}
 
 {% block content %}
-<div class="container mt-5" style="max-width: 600px;">
+<div class="container mt-5" style="max-width: 900px;">
     <h2 class="mb-4 text-center">マイページ</h2>
 
-    <div class="border rounded p-4 mb-4 bg-light">
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} text-center">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
+    <div class="row">
+        <!-- 左カラム: ユーザー情報と住所情報の一括更新フォーム -->
+        <div class="col-md-6">
+            <div class="border rounded p-4 bg-light mb-4 h-100">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} text-center">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
 
-        <form method="post" novalidate>
-            {% csrf_token %}
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    <h5 class="text-center">ユーザー情報</h5>
+                    {% for field in user_form %}
+                        <div class="mb-3 d-flex flex-column align-items-center">
+                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}
+                                <div class="text-danger small">{{ field.errors|striptags }}</div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                    
+                    <label class="form-label small text-center w-100">住所を選択</label>
+                    <select class="form-select form-select-sm mb-3" id="address-select" style="text-align: center; text-align-last: center">
+                        {% for address in addresses %}
+                            <option value="{{ address.id }}">{{ address.postal_code }} {{ address.prefecture }} {{ address.city }} {{ address.street }} {{ address.building }}</option>
+                        {% endfor %}
+                    </select>
 
-            <!-- ユーザー情報 -->
-            <h5 class="text-center">ユーザー情報</h5>
-            {% for field in user_form %}
-                <div class="mb-3 d-flex flex-column align-items-center">
-                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                    {{ field }}
-                    {% if field.errors %}<div class="text-danger small">{{ field.errors|striptags }}</div>{% endif %}
-                </div>
-            {% endfor %}
+                    {% for field in address_form %}
+                        <div class="mb-3 d-flex flex-column align-items-center">
+                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}
+                                <div class="text-danger small">{{ field.errors|striptags }}</div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
 
-            <!-- パスワード設定 -->
-            <div class="mb-4">
+                    <div class="form-check mb-3 d-flex justify-content-center">
+                        <input class="form-check-input" type="checkbox" id="id_is_default" name="is_default">
+                        <label class="form-check-label ms-2" for="id_is_default">この住所を配送先に設定</label>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <button type="submit" name="update_all" class="btn btn-primary">更新</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 右カラム: 新しいパスワードと新しい住所 -->
+        <div class="col-md-6 d-flex flex-column gap-4">
+            <!-- 新しいパスワードを設定 -->
+            <div class="border rounded p-4 bg-light">
                 <button class="btn btn-link d-block mx-auto text-muted" type="button" data-bs-toggle="collapse" data-bs-target="#passwordForm" aria-expanded="false" aria-controls="passwordForm">
                     新しいパスワードを設定
                 </button>
                 <div class="collapse" id="passwordForm">
-                    {% for field in password_form %}
-                        <div class="mb-3 d-flex flex-column align-items-center">
-                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                            {{ field }}
-                            {% if field.errors %}<div class="text-danger small">{{ field.errors|striptags }}</div>{% endif %}
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        {% for field in password_form %}
+                            <div class="mb-3 d-flex flex-column align-items-center">
+                                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                {{ field }}
+                                {% if field.errors %}
+                                    <div class="text-danger small">{{ field.errors|striptags }}</div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                        <div class="text-center">
+                            <button type="submit" name="save_password" class="btn btn-outline-secondary btn-sm">パスワードを保存</button>
                         </div>
-                    {% endfor %}
-                    <div class="text-center">
-                        <button type="submit" name="save_password" class="btn btn-outline-secondary btn-sm">パスワードを保存</button>
-                    </div>
+                    </form>
                 </div>
             </div>
 
-            <!-- 住所 -->
-            <h5 class="text-center">住所</h5>
-            <label class="form-label small text-center w-100">住所を選択</label>
-            <select class="form-select form-select-sm mb-3" id="address-select" style="text-align: center; text-align-last: center">
-                {% for address in addresses %}
-                    <option value="{{ address.id }}">{{ address.postal_code }} {{ address.prefecture }} {{ address.city }} {{ address.detail }}</option>
-                {% endfor %}
-            </select>
-            {% for field in address_form %}
-                <div class="mb-3 d-flex flex-column align-items-center">
-                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                    {{ field }}
-                    {% if field.errors %}<div class="text-danger small">{{ field.errors|striptags }}</div>{% endif %}
-                </div>
-            {% endfor %}
-
-            <!-- この住所をデフォルトに設定 -->
-            <div class="form-check mb-3 d-flex justify-content-center">
-                <input class="form-check-input" type="checkbox" id="id_is_default" name="is_default">
-                <label class="form-check-label ms-2" for="id_is_default">この住所を配送先に設定</label>
-            </div>
-
-            <!-- 新しい住所追加 -->
-            <div class="mb-4">
+            <!-- 新しい住所を追加 -->
+            <div class="border rounded p-4 bg-light">
                 <button class="btn btn-link d-block mx-auto text-muted" type="button" data-bs-toggle="collapse" data-bs-target="#newAddressForm" aria-expanded="false" aria-controls="newAddressForm">
                     新しい住所を追加
                 </button>
                 <div class="collapse" id="newAddressForm">
-                    {% for field in new_address_form %}
-                        <div class="mb-3 d-flex flex-column align-items-center">
-                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                            {{ field }}
-                            {% if field.errors %}<div class="text-danger small">{{ field.errors|striptags }}</div>{% endif %}
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        {% for field in new_address_form %}
+                            <div class="mb-3 d-flex flex-column align-items-center">
+                                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                {{ field }}
+                                {% if field.errors %}
+                                    <div class="text-danger small">{{ field.errors|striptags }}</div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                        <div class="form-check mb-3 d-flex justify-content-center">
+                            <input class="form-check-input" type="checkbox" id="id_new_is_default" name="new_is_default">
+                            <label class="form-check-label ms-2" for="id_new_is_default">この住所を配送先に設定</label>
                         </div>
-                    {% endfor %}
-
-                    <!-- 新住所をデフォルトに設定 -->
-                    <div class="form-check mb-3 d-flex justify-content-center">
-                        <input class="form-check-input" type="checkbox" id="id_new_is_default" name="new_is_default">
-                        <label class="form-check-label ms-2" for="id_new_is_default">この住所を配送先に設定</label>
-                    </div>
-
-                    <div class="text-center">
-                        <button type="submit" name="save_new_address" class="btn btn-outline-secondary btn-sm">新しい住所を保存</button>
-                    </div>
+                        <div class="text-center">
+                            <button type="submit" name="save_new_address" class="btn btn-outline-secondary btn-sm">新しい住所を保存</button>
+                        </div>
+                    </form>
                 </div>
             </div>
-
-            <!-- 一括更新 -->
-            <div class="text-center mt-4">
-                <button type="submit" name="update_all" class="btn btn-primary">更新</button>
-            </div>
-        </form>
+        </div>
     </div>
 </div>
-
 {% endblock %}
 
 {% block scripts_extra %}
 <script>
+    // フォームのプレフィックスをテンプレートから取得
+    const addressPrefix = "{{ address_form.prefix }}";
+
     // ビューから渡されたJSONデータをJavaScript変数に格納
     const allAddressesData = JSON.parse('{{ addresses_json|safe }}');
 
     document.addEventListener('DOMContentLoaded', function() {
         const addressSelect = document.getElementById('address-select');
-        if (!addressSelect) {
-            return; // 要素が見つからなければ処理を中断
-        }
-        
-        // 住所フォームの各フィールド要素を取得（Djangoが生成するIDを使用）
-        // これらのIDはDjangoのforms.pyで定義されたフィールド名に基づきます
-        const postalCodeField = document.getElementById('id_postal_code');
-        const prefectureField = document.getElementById('id_prefecture');
-        const cityField = document.getElementById('id_city');
-        const streetField = document.getElementById('id_street');
-        const buildingField = document.getElementById('id_building');
-        // 他の住所フィールドがあればここに追加してください
+        if (!addressSelect) return;
 
-        // フォームフィールドを更新するヘルパー関数
+        // 各フォームフィールドを prefix 付きで取得
+        const postalCodeField = document.getElementById(`id_${addressPrefix}-postal_code`);
+        const prefectureField = document.getElementById(`id_${addressPrefix}-prefecture`);
+        const cityField = document.getElementById(`id_${addressPrefix}-city`);
+        const streetField = document.getElementById(`id_${addressPrefix}-street`);
+        const buildingField = document.getElementById(`id_${addressPrefix}-building`);
+
         function updateAddressFormFields(address) {
             if (postalCodeField) postalCodeField.value = address ? (address.postal_code || '') : '';
             if (prefectureField) prefectureField.value = address ? (address.prefecture || '') : '';
@@ -133,47 +144,29 @@
             if (buildingField) buildingField.value = address ? (address.building || '') : '';
         }
 
-        // ドロップダウンの変更イベントをリッスン
         addressSelect.addEventListener('change', function() {
-            const selectedAddressId = this.value; // 選択されたoptionのvalue（住所ID）を取得
-
-            if (selectedAddressId) {
-                // allAddressesDataから選択された住所オブジェクトを検索
-                const selectedAddress = allAddressesData.find(addr => String(addr.id) === String(selectedAddressId)); // IDの型を合わせる
-                
-                if (selectedAddress) {
-                    updateAddressFormFields(selectedAddress);
-                } else {
-                    updateAddressFormFields(null); // 見つからなければフォームをクリア
-                }
-            } else {
-                // 「--- 住所を選択してください ---」が選択された場合、フォームをクリア
-                updateAddressFormFields(null);
-            }
+            const selectedAddressId = this.value;
+            const selectedAddress = allAddressesData.find(addr => String(addr.id) === String(selectedAddressId));
+            updateAddressFormFields(selectedAddress || null);
         });
 
+        // 初期表示時にデフォルト住所を反映
         const initialSelectedId = addressSelect.value;
         if (initialSelectedId) {
             const initialAddress = allAddressesData.find(addr => String(addr.id) === String(initialSelectedId));
-            if (initialAddress) {
-                updateAddressFormFields(initialAddress);
-            }
+            if (initialAddress) updateAddressFormFields(initialAddress);
         }
 
+        // チェックボックス排他制御
         const existingCheckbox = document.getElementById('id_is_default');
         const newCheckbox = document.getElementById('id_new_is_default');
 
         if (existingCheckbox && newCheckbox) {
             existingCheckbox.addEventListener('change', function () {
-                if (this.checked) {
-                    newCheckbox.checked = false;
-                }
+                if (this.checked) newCheckbox.checked = false;
             });
-
             newCheckbox.addEventListener('change', function () {
-                if (this.checked) {
-                    existingCheckbox.checked = false;
-                }
+                if (this.checked) existingCheckbox.checked = false;
             });
         }
     });
