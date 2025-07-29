@@ -4,9 +4,9 @@
 
 {% block content %}
     <img src="{% static 'images/top2.png' %}" alt="トップバナー" class="img-fluid w-100 d-block">
-    <!-- <h2 class="mb-4">商品一覧</h2> -->
+
     {% for category, products in category_products %}
-        <h3 class="mt-4">{{ category.name }}</h3>
+        <h3 class="category-heading">{{ category.name }}</h3>
         <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
             {% for product in products %}
                 <div class="col">

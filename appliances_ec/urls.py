@@ -6,9 +6,7 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    #トップページ
     path('', product_views.product_list, name='home'),
-    #各アプリケーションのURLconfを含める
     path('users/', include('users.urls', namespace='users')),
     path('products/', include('products.urls')),
     path('cart/', include('cart.urls')),
