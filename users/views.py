@@ -132,23 +132,52 @@ def user_register(request):
 def user_mypage(request):
     user = request.user
     addresses = Address.objects.filter(user=user)
+    # GET時・初期表示用
     default_address = addresses.filter(is_default=True).first()
+    # 変更: デフォルトアドレスが設定されていない場合は最初の住所をフォールバック
+    if default_address is None:
+        default_address = addresses.first()
+
+    # 変更: GETリクエストでの削除処理を追加
+    delete_id = request.GET.get('address_id')
+    if delete_id and 'delete_address' in request.GET:
+        try:
+            address_to_delete = Address.objects.get(id=delete_id, user=user)
+            address_to_delete.delete()
+            messages.success(request, '選択中の住所を削除しました。')
+        except Address.DoesNotExist:
+            pass
+        return redirect('users:mypage')
 
     if request.method == 'POST':
-        if 'update_all' in request.POST:
-            user_form = UserUpdateForm(request.POST, instance=user, prefix='user')
-            address_form = AddressForm(request.POST, instance=default_address, prefix='address')
-            password_form = PasswordUpdateForm(user, prefix='password')
-            new_address_form = AddressForm(prefix='newaddress')
+        selected_id = request.POST.get('address_id')
+        try:
+            selected_address = Address.objects.get(id=selected_id, user=user)
+        except Address.DoesNotExist:
+            selected_address = default_address
 
+        # ■ 削除ボタン押下時
+        if 'delete_address' in request.POST:
+            if selected_address:
+                selected_address.delete()
+                messages.success(request, '選択中の住所を削除しました。')
+            return redirect('users:mypage')
+
+        # フォームを作成
+        user_form = UserUpdateForm(request.POST, instance=user, prefix='user')
+        address_form = AddressForm(request.POST, instance=selected_address, prefix='address')
+        password_form = PasswordUpdateForm(user, prefix='password')
+        new_address_form = AddressForm(prefix='newaddress')
+
+        if 'update_all' in request.POST:
             if user_form.is_valid() and address_form.is_valid():
                 user_form.save()
-                address = address_form.save(commit=False)
-                address.user = user
-                address.is_default = True
-                address.save()
+                addr = address_form.save(commit=False)
+                addr.user = user
+                addr.is_default = True
+                addr.save()
                 if 'address-is_default' in request.POST:
-                    set_default_address(user, address)
+                    set_default_address(user, addr)
                 messages.success(request, 'ユーザー情報と住所を更新しました。')
                 return redirect('users:mypage')
             else:
@@ -185,12 +214,13 @@ def user_mypage(request):
             else:
                 messages.error(request, '新しい住所の追加に失敗しました。')
     else:
+        # GET時は default_address を選択
         user_form = UserUpdateForm(instance=user, prefix='user')
         password_form = PasswordUpdateForm(user, prefix='password')
         address_form = AddressForm(instance=default_address, prefix='address')
         new_address_form = AddressForm(prefix='newaddress')
+        selected_address = default_address
 
-    # 住所のJSON生成もフィールド名が変わるので必要に応じて修正してください
     addresses_json = json.dumps([{
         'id': addr.id,
         'postal_code': addr.postal_code,
@@ -198,6 +228,7 @@ def user_mypage(request):
         'city': addr.city,
         'street': addr.street,
         'building': addr.building,
+        'is_default': addr.is_default,
     } for addr in addresses])
 
     return render(request, 'users/mypage.html', {
@@ -206,7 +237,7 @@ def user_mypage(request):
         'address_form': address_form,
         'new_address_form': new_address_form,
         'addresses': addresses,
-        'default_address': default_address,
+        'selected_address': selected_address,
         'addresses_json': addresses_json,
     })
 

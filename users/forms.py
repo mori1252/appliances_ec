@@ -23,14 +23,16 @@ class CustomUserCreationForm(UserCreationForm):
             'password2': forms.PasswordInput(attrs={'class': 'form-control text-center'}),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # password1, password2 のwidget attrsを個別設定
+        self.fields['password1'].widget.attrs.update({'class': 'form-control text-center'})
+        self.fields['password2'].widget.attrs.update({'class': 'form-control text-center'})
+
 class CustomLoginForm(AuthenticationForm):
     username = forms.CharField(
         label='ユーザーネーム',
-        widget=forms.TextInput(attrs={'autofocus': True})
-    )
-    password = forms.CharField(
-        label='パスワード',
-        widget=forms.PasswordInput
+        widget=forms.TextInput(attrs={'class': 'form-control text-center', 'autofocus': True})
     )
     password = forms.CharField(
         label='パスワード',

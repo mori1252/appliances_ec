@@ -4,12 +4,12 @@
 {% block title %}{{ product.name }}{% endblock %}
 
 {% block content %}
+
     <div class="row mt-5">
         <div class="col-md-5">
             {% if product.image %}
                 <img src="{{ product.image.url }}" class="img-fluid rounded shadow-sm" alt="{{ product.name }}" >
             {% else %}
-                {# カスタムクラス 'product-detail-no-image'を追加 #}
                 <img src="{% static 'img/no_image.png' %}" class="img-fluid rounded shadow-sm product-detail-no-image" alt="画像なし">
             {% endif %}
         </div>

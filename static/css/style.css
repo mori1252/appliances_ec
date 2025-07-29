@@ -94,3 +94,12 @@
     max-width: 900px;
 }
 
+.card-img-top {
+    height: 140px;
+    object-fit: cover;
+}
+
+.card-text.text-primary {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
